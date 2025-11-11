@@ -1,0 +1,169 @@
+import React, { useEffect, useState } from "react";
+
+// BloomingRose.jsx // Default export: React component that renders a single animated rose that "grows" (petals & stem appear) // Designed to be dropped into a React app (Vite / Create React App / Next.js). Uses Tailwind utility classes.
+
+export default function BloomingRose({ size = 420, petalColor = "#e11d48", // ruby rose leafColor = "#166534", stemColor = "#14532d", speed = 1, // 1 = normal, 0.5 slower, 2 faster loop = false, startOnMount = true, }) { const [started, setStarted] = useState(Boolean(startOnMount)); const [cycleKey, setCycleKey] = useState(0);
+
+useEffect(() => { if (!startOnMount) return; setStarted(true); }, [startOnMount]);
+
+// allow looping by re-triggering animation useEffect(() => { if (!loop) return; const totalMs = 4200 / speed; // match CSS timeline roughly const id = setInterval(() => { setCycleKey((k) => k + 1); setStarted(false); // small timeout to retrigger CSS by remount trick setTimeout(() => setStarted(true), 40); }, totalMs + 500); return () => clearInterval(id); }, [loop, speed]);
+
+// Inline styles (CSS variables) to control speed and colours const svgStyle = { ['--rose-size']: ${size}px, ['--speed']: ${speed}s, ['--petal']: petalColor, ['--leaf']: leafColor, ['--stem']: stemColor, };
+
+return ( <div className="flex flex-col items-center gap-4 p-4" style={{ width: size }}> <div className="w-full flex justify-center" style={svgStyle} key={cycleKey}> <svg viewBox="0 0 200 260" width={size} height={(size * 260) / 200} className={select-none}>
+
+<defs>
+        <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="0.6" result="b" />
+        </filter>
+        <linearGradient id="petalGrad" x1="0" x2="1">
+          <stop offset="0%" stopColor="var(--petal)" stopOpacity="1" />
+          <stop offset="100%" stopColor="#ff9eb1" stopOpacity="0.95" />
+        </linearGradient>
+        <linearGradient id="leafGrad" x1="0" x2="1">
+          <stop offset="0%" stopColor="#1b5e20" />
+          <stop offset="100%" stopColor="#57a05a" />
+        </linearGradient>
+      </defs>
+
+      {/* STEM */}
+      <g className={`stemGroup ${started ? 'animate-stem-grow' : ''}`}>
+        <path
+          className="stem"
+          d="M100 80 C98 120, 110 140, 108 180 C107 200, 104 230, 102 250"
+          fill="none"
+          stroke="var(--stem)"
+          strokeWidth="3"
+          strokeLinecap="round"
+        />
+        {/* Leaves */}
+        <g className={`leftLeaf ${started ? 'animate-leaf-left' : ''}`}>
+          <path d="M96 130 C76 120, 62 110, 64 98 C74 104, 88 112, 96 116" fill="url(#leafGrad)" transform="translate(0,8) scale(0.6)" />
+        </g>
+        <g className={`rightLeaf ${started ? 'animate-leaf-right' : ''}`}>
+          <path d="M104 150 C126 142, 140 132, 138 120 C128 126, 114 134, 104 138" fill="url(#leafGrad)" transform="translate(0,8) scale(0.6)" />
+        </g>
+      </g>
+
+      {/* BUD & PETALS: layered shapes that scale/rotate into place */}
+      <g className="budGroup" transform="translate(100,76)">
+        {/* inner heart (center) */}
+        <g className={`center ${started ? 'animate-center' : ''}`}>
+          <path d="M0 0 C8 -10, 24 -14, 30 -4 C34 2, 32 14, 18 22 C6 28, -6 22, -18 14 C-26 8, -30 -2, -20 -8 C-10 -14, -6 -12, 0 0 Z" fill="url(#petalGrad)" filter="url(#soft)" />
+        </g>
+
+        {/* petals: 6 petals arranged around center */}
+        <g className="petals">
+          <path className={`petal p1 ${started ? 'animate-petal-1' : ''}`} d="M0 -6 C18 -26, 36 -18, 18 -4 C6 6, -6 10, -18 -4 C-4 -12, 0 -6, 0 -6 Z" fill="url(#petalGrad)" />
+          <path className={`petal p2 ${started ? 'animate-petal-2' : ''}`} d="M0 -6 C22 -20, 34 -4, 12 -2 C2 1, -6 6, -18 -4 C-6 -8, 0 -6, 0 -6 Z" fill="url(#petalGrad)" transform="rotate(40)" />
+          <path className={`petal p3 ${started ? 'animate-petal-3' : ''}`} d="M0 -6 C18 -28, 34 -24, 18 -6 C8 6, -2 12, -18 -4 C-4 -12, 0 -6, 0 -6 Z" fill="url(#petalGrad)" transform="rotate(80)" />
+          <path className={`petal p4 ${started ? 'animate-petal-4' : ''}`} d="M0 -6 C18 -26, 36 -18, 18 -4 C6 6, -6 10, -18 -4 C-4 -12, 0 -6, 0 -6 Z" fill="url(#petalGrad)" transform="rotate(120)" />
+          <path className={`petal p5 ${started ? 'animate-petal-5' : ''}`} d="M0 -6 C22 -20, 34 -4, 12 -2 C2 1, -6 6, -18 -4 C-6 -8, 0 -6, 0 -6 Z" fill="url(#petalGrad)" transform="rotate(160)" />
+          <path className={`petal p6 ${started ? 'animate-petal-6' : ''}`} d="M0 -6 C18 -28, 34 -24, 18 -6 C8 6, -2 12, -18 -4 C-4 -12, 0 -6, 0 -6 Z" fill="url(#petalGrad)" transform="rotate(200)" />
+        </g>
+
+        {/* outer petals subtle shimmer */}
+        <g className={`outer ${started ? 'animate-outer' : ''}`}>
+          <ellipse cx="0" cy="-6" rx="42" ry="24" fillOpacity="0.06" />
+        </g>
+      </g>
+
+      {/* tiny ground shadow */}
+      <ellipse cx="100" cy="252" rx="28" ry="6" fillOpacity="0.12" />
+
+      {/* Styles scoped to component - using CSS variables above */}
+      <style>
+        {`
+        svg { display:block }
+
+        /* Animation timings reference: --speed variable */
+        .animate-stem-grow path.stem {
+          stroke-dasharray: 400;
+          stroke-dashoffset: 400;
+          animation: stem-draw var(--speed) ease-out forwards;
+        }
+
+        @keyframes stem-draw {
+          to { stroke-dashoffset: 0; }
+        }
+
+        .leftLeaf path, .rightLeaf path {
+          transform-origin: 50% 50%;
+          opacity: 0;
+        }
+
+        .animate-leaf-left path {
+          animation: leafIn var(--speed) ease-out 0.6s forwards;
+        }
+        .animate-leaf-right path {
+          animation: leafIn var(--speed) ease-out 0.85s forwards;
+        }
+
+        @keyframes leafIn {
+          0% { transform: translateY(8px) scale(0.2) rotate(-20deg); opacity:0 }
+          60% { transform: translateY(0px) scale(1.05) rotate(4deg); opacity:1 }
+          100% { transform: translateY(0px) scale(1) rotate(0deg); opacity:1 }
+        }
+
+        .center path { transform-origin: 50% 60%; opacity:0; transform: scale(0.25) translateY(8px) }
+        .animate-center path { animation: centerPop calc(var(--speed) * 0.9) cubic-bezier(.2,.9,.3,1) 0.9s forwards }
+        @keyframes centerPop { to { opacity:1; transform: scale(1) translateY(0) } }
+
+        .petal { transform-origin: 0 30px; opacity:0; transform: scale(0.2) translateY(10px) rotate(0deg) }
+
+        .animate-petal-1 { animation: petalPop calc(var(--speed) * 0.95) ease-out 1.0s forwards }
+        .animate-petal-2 { animation: petalPop calc(var(--speed) * 0.95) ease-out 1.08s forwards }
+        .animate-petal-3 { animation: petalPop calc(var(--speed) * 0.95) ease-out 1.16s forwards }
+        .animate-petal-4 { animation: petalPop calc(var(--speed) * 0.95) ease-out 1.24s forwards }
+        .animate-petal-5 { animation: petalPop calc(var(--speed) * 0.95) ease-out 1.32s forwards }
+        .animate-petal-6 { animation: petalPop calc(var(--speed) * 0.95) ease-out 1.40s forwards }
+
+        @keyframes petalPop {
+          0% { opacity:0; transform: scale(0.16) translateY(12px) rotate(-6deg) }
+          55% { opacity:1; transform: scale(1.08) translateY(-2px) rotate(4deg) }
+          100% { opacity:1; transform: scale(1) translateY(0) rotate(0deg) }
+        }
+
+        .animate-outer { opacity:0; transform-origin: 50% 50%; transform: scale(0.8); animation: outerBloom calc(var(--speed) * 1.2) ease-out 1.55s forwards }
+        @keyframes outerBloom { to { opacity:1; transform: scale(1) } }
+
+        /* slight floating once finished */
+        .budGroup { transition: transform 300ms ease }
+        .budGroup.animate-float { animation: floaty calc(var(--speed) * 6) ease-in-out infinite }
+        @keyframes floaty {
+          0% { transform: translate(0,0) }
+          50% { transform: translate(0,-3px) }
+          100% { transform: translate(0,0) }
+        }
+
+        /* small, friendly shadow pulse */
+        ellipse { transition: opacity 300ms }
+
+        `}
+      </style>
+    </svg>
+  </div>
+
+  <div className="w-full flex justify-center gap-3">
+    <button
+      className="px-3 py-1 rounded-full text-sm bg-white/90 shadow-sm border"
+      onClick={() => {
+        setStarted(false);
+        setTimeout(() => setStarted(true), 30);
+      }}>
+      Bloom
+    </button>
+
+    <button
+      className="px-3 py-1 rounded-full text-sm bg-white/90 shadow-sm border"
+      onClick={() => {
+        setStarted(false);
+      }}>
+      Reset
+    </button>
+  </div>
+
+  <div className="text-xs text-slate-500 mt-2">Tip: change <code>petalColor</code>, <code>speed</code> or enable <code>loop</code> in props.</div>
+</div>
+
+); }
